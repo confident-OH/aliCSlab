@@ -44,6 +44,21 @@ void cache_init(void)
     }
 }
 
+void freeAll(void)
+{
+    int maxl = 1 << groupS;
+    cache_cao *current, *last;
+    for(int i = 0; i<maxl; i++){
+        current = cache[i].next;
+        while(current != NULL){
+            last = current;
+            current = current->next;
+            free(last);
+        }
+    }
+    free(cache);
+}
+
 int visitMemory(long long int addr)
 {
     int thisTag = addr >> (groupS + blocksize);
@@ -87,6 +102,7 @@ int main(int argc, char* argv[])
 {
     int Myoptid;
     int recv = 0;
+    char lineend;
     while((Myoptid = getopt(argc, argv, "h::v::s:E:b:t:")) != -1){
         switch (Myoptid)
         {
@@ -133,8 +149,9 @@ int main(int argc, char* argv[])
         fscanf(fp, "%llx", &memoryAddr);
         fgetc(fp);
         fscanf(fp, "%lld", &memorySize);
-        fgetc(fp);
-        printf(" %c %llx,%lld\n", cacheOP, memoryAddr, memorySize);
+        lineend = fgetc(fp);
+        while(lineend != '\n'){ lineend = fgetc(fp); }
+        //printf(" %c %llx,%lld\n", cacheOP, memoryAddr, memorySize);
         switch (cacheOP)
         {
         case 'I':
@@ -201,5 +218,6 @@ int main(int argc, char* argv[])
         cacheOP = fgetc(fp);
     }
     printSummary(hit_count, miss_count, eviction_count);
+    freeAll();
     return 0;
 }
